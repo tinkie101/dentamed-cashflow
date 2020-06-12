@@ -1,0 +1,134 @@
+<mvc:View
+	controllerName="dentamed.cashflow.controller.Overview"
+	xmlns:mvc="sap.ui.core.mvc"
+	xmlns:f="sap.f"
+	xmlns:l="sap.ui.layout"
+	xmlns="sap.m"
+	xmlns:core="sap.ui.core"
+	busy="{viewModel>/busy}"
+	busyIndicatorDelay="{viewModel>/delay}">
+	<Page showHeader="false">
+		<f:DynamicPage headerExpanded="true"
+					   preserveHeaderStateOnScroll="true"
+					   toggleHeaderOnTitleClick="false">
+			<f:title>
+				<f:DynamicPageTitle>
+					<f:heading>
+						<Title text="{i18n>appTitle}"/>
+					</f:heading>
+					<f:actions>
+						<Button icon="sap-icon://edit"
+								type="Transparent"
+								press="onEditPressed(${viewModel>/editable})"
+								visible="{= !${viewModel>/editable} }"/>
+						<Button icon="sap-icon://save"
+								type="Accept"
+								press="onEditPressed(${viewModel>/editable})"
+								visible="{viewModel>/editable}"/>
+						<Button icon="sap-icon://cancel"
+								type="Reject"
+								press="onEditPressed(${viewModel>/editable})"
+								visible="{viewModel>/editable}"/>
+						<Button icon="sap-icon://refresh"
+								type="Transparent"
+								press="onRefresh"/>
+					</f:actions>
+				</f:DynamicPageTitle>
+			</f:title>
+			<f:header>
+				<f:DynamicPageHeader pinnable="false">
+					<f:content>
+						<l:Grid>
+							<HBox alignItems="Center">
+								<layoutData>
+									<l:GridData span="XL4 L4 M6 S12"/>
+								</layoutData>
+
+								<Label text="Date Range:"/>
+								<DatePicker displayFormat="MM-y"
+											change="handleChange"
+											class="sapUiSmallMarginBegin">
+								</DatePicker>
+							</HBox>
+
+							<VBox>
+								<layoutData>
+									<l:GridData span="XL4 L4 M6 S12"/>
+								</layoutData>
+								<HBox>
+									<Label design="Bold"
+										   text="Total Income:"/>
+									<ObjectStatus text="In Stock"
+												  state="Success"/>
+								</HBox>
+
+								<HBox>
+									<Label design="Bold"
+										   text="Total Expenses:"/>
+									<ObjectStatus text="In Stock"
+												  state="Error"/>
+								</HBox>
+
+								<HBox>
+									<Label design="Bold"
+										   text="Net:"/>
+									<ObjectStatus text="In Stock"
+												  state="Success"/>
+								</HBox>
+							</VBox>
+						</l:Grid>
+					</f:content>
+				</f:DynamicPageHeader>
+			</f:header>
+			<f:content>
+				<FlexBox height="98%">
+					<Table busyIndicatorDelay="{viewModel>/delay}"
+						   busy="{viewModel>/busy}"
+						   class="sapUiSizeCompact">
+						<columns>
+							<Column hAlign="Center">
+								<Text text="Date"/>
+							</Column>
+							<Column hAlign="Center">
+								<Text text="Income"/>
+							</Column>
+							<Column hAlign="Center">
+								<Text text="Comment"/>
+							</Column>
+							<Column hAlign="Center">
+								<Text text="Outcome"/>
+							</Column>
+							<Column hAlign="Center">
+								<Text text="Out Value"/>
+							</Column>
+							<Column hAlign="Center">
+							</Column>
+						</columns>
+						<items>
+							<ColumnListItem>
+								<cells>
+									<DatePicker editable="{viewModel>/editable}"
+												displayFormat="dd-MM-y"
+												value="01-02-2020"
+												textAlign="Center"/>
+									<Input editable="{viewModel>/editable}"
+										   value="{parts: [{value: 100000}, {value: 'ZAR'}], type: 'sap.ui.model.type.Currency', formatOptions: {showMeasure: false}}"
+										   textAlign="Center"/>
+									<Input editable="{viewModel>/editable}"
+										   value="{value: 'This is a comment', type: 'sap.ui.model.type.Text'}"/>
+									<Text text="Outcome"/>
+									<Input editable="{viewModel>/editable}"
+										   textAlign="Center"
+										   value="{parts: [{value: 2000}, {value: 'ZAR'}], type: 'sap.ui.model.type.Currency', formatOptions: {showMeasure: false}}"/>
+									<Button icon="sap-icon://delete"
+											type="Reject"
+											visible="{viewModel>/editable}"/>
+								</cells>
+							</ColumnListItem>
+						</items>
+					</Table>
+				</FlexBox>
+			</f:content>
+		</f:DynamicPage>
+	</Page>
+</mvc:View>
