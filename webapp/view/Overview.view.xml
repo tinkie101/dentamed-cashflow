@@ -82,20 +82,20 @@
 							</Toolbar>
 						</infoToolbar>
 						<columns>
-							<Column hAlign="Center">
+							<Column hAlign="Center"  width="22%">
 								<Text text="Date"/>
 							</Column>
-							<Column hAlign="Center">
+							<Column hAlign="Center" width="5rem">
 								<Text text="Type"/>
 							</Column>
-							<Column hAlign="Center">
+							<Column hAlign="Center" width="10rem">
 								<Text text="Value"/>
 							</Column>
 							<Column hAlign="Center">
 								<Text text="Comment"/>
 							</Column>
 							<Column hAlign="Center"
-									width="4rem">
+									width="3rem">
 							</Column>
 						</columns>
 						<items>
