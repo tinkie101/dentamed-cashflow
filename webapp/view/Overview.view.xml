@@ -3,8 +3,8 @@
 	xmlns:mvc="sap.ui.core.mvc"
 	xmlns:f="sap.f"
 	xmlns:l="sap.ui.layout"
+	xmlns:dc="dentamed.cashflow.control"
 	xmlns="sap.m"
-	xmlns:core="sap.ui.core"
 	busy="{viewModel>/busy}"
 	busyIndicatorDelay="{viewModel>/delay}">
 	<Page showHeader="false">
@@ -17,109 +17,111 @@
 						<Title text="{i18n>appTitle}"/>
 					</f:heading>
 					<f:actions>
-						<Button icon="sap-icon://edit"
+						<Button icon="sap-icon://print"
+								text="Print"
 								type="Transparent"
-								press="onEditPressed(${viewModel>/editable})"
-								visible="{= !${viewModel>/editable} }"/>
-						<Button icon="sap-icon://save"
-								type="Accept"
-								press="onEditPressed(${viewModel>/editable})"
-								visible="{viewModel>/editable}"/>
-						<Button icon="sap-icon://cancel"
-								type="Reject"
-								press="onEditPressed(${viewModel>/editable})"
-								visible="{viewModel>/editable}"/>
-						<Button icon="sap-icon://refresh"
-								type="Transparent"
-								press="onRefresh"/>
+								enabled="{= !${viewModel>/editable} }"/>
 					</f:actions>
 				</f:DynamicPageTitle>
 			</f:title>
-			<f:header>
-				<f:DynamicPageHeader pinnable="false">
-					<f:content>
-						<l:Grid>
-							<HBox alignItems="Center">
-								<layoutData>
-									<l:GridData span="XL4 L4 M6 S12"/>
-								</layoutData>
-
-								<Label text="Date Range:"/>
-								<DatePicker displayFormat="MM-y"
-											change="handleChange"
-											class="sapUiSmallMarginBegin">
-								</DatePicker>
-							</HBox>
-
-							<VBox>
-								<layoutData>
-									<l:GridData span="XL4 L4 M6 S12"/>
-								</layoutData>
-								<HBox>
-									<Label design="Bold"
-										   text="Total Income:"/>
-									<ObjectStatus text="In Stock"
-												  state="Success"/>
-								</HBox>
-
-								<HBox>
-									<Label design="Bold"
-										   text="Total Expenses:"/>
-									<ObjectStatus text="In Stock"
-												  state="Error"/>
-								</HBox>
-
-								<HBox>
-									<Label design="Bold"
-										   text="Net:"/>
-									<ObjectStatus text="In Stock"
-												  state="Success"/>
-								</HBox>
-							</VBox>
-						</l:Grid>
-					</f:content>
-				</f:DynamicPageHeader>
-			</f:header>
 			<f:content>
 				<FlexBox height="98%">
 					<Table busyIndicatorDelay="{viewModel>/delay}"
 						   busy="{viewModel>/busy}"
+						   items="{viewModel>/items}"
 						   class="sapUiSizeCompact">
+						<headerToolbar>
+							<Toolbar>
+								<ToolbarSpacer/>
+								<Button text="Edit"
+										press="onEditPressed(${viewModel>/editable})"
+										visible="{= !${viewModel>/editable} }"/>
+								<Button text="Add"
+										press="onAddPressed"
+										visible="{viewModel>/editable}"/>
+								<Button text="Save"
+										type="Transparent"
+										press="onEditPressed(${viewModel>/editable})"
+										visible="{viewModel>/editable}"/>
+								<Button text="Cancel"
+										type="Transparent"
+										press="onEditPressed(${viewModel>/editable})"
+										visible="{viewModel>/editable}"/>
+							</Toolbar>
+						</headerToolbar>
+						<infoToolbar>
+							<Toolbar>
+								<l:Grid vSpacing="0"
+										hSpacing="0">
+									<HBox alignItems="Center">
+										<layoutData>
+											<l:GridData span="XL11 L11 M11 S11"/>
+										</layoutData>
+										<Label text="Date Range:"/>
+										<DatePicker displayFormat="MMMM yyyy"
+													value="{viewModel>/selectedDate}"
+													valueFormat="MM-yyyy"
+													change="onDateChange(${viewModel>/selectedDate})"
+													class="sapUiSmallMarginBegin"
+													editable="{= !${viewModel>/editable} }">
+										</DatePicker>
+									</HBox>
+								</l:Grid>
+								<ToolbarSpacer/>
+								<ObjectStatus text="Income:"
+											  state="Success"/>
+								<Text text="15614"/>
+
+								<ObjectStatus text="Expenses:"
+											  state="Error"/>
+								<Text text="1000"/>
+
+								<ObjectStatus text="Net:"
+											  state="Success"/>
+								<Text text="5614"/>
+							</Toolbar>
+						</infoToolbar>
 						<columns>
 							<Column hAlign="Center">
 								<Text text="Date"/>
 							</Column>
 							<Column hAlign="Center">
-								<Text text="Income"/>
+								<Text text="Type"/>
+							</Column>
+							<Column hAlign="Center">
+								<Text text="Value"/>
 							</Column>
 							<Column hAlign="Center">
 								<Text text="Comment"/>
 							</Column>
-							<Column hAlign="Center">
-								<Text text="Outcome"/>
-							</Column>
-							<Column hAlign="Center">
-								<Text text="Out Value"/>
-							</Column>
-							<Column hAlign="Center">
+							<Column hAlign="Center"
+									width="4rem">
 							</Column>
 						</columns>
 						<items>
 							<ColumnListItem>
 								<cells>
 									<DatePicker editable="{viewModel>/editable}"
-												displayFormat="dd-MM-y"
-												value="01-02-2020"
-												textAlign="Center"/>
-									<Input editable="{viewModel>/editable}"
-										   value="{parts: [{value: 100000}, {value: 'ZAR'}], type: 'sap.ui.model.type.Currency', formatOptions: {showMeasure: false}}"
-										   textAlign="Center"/>
+												displayFormat="dd MMMM"
+												valueFormat="dd-MM-yyyy"
+												value="01-06-2020"
+												textAlign="Center"
+												minDate="{viewModel>/minDate}"
+												maxDate="{viewModel>/maxDate}"/>
+									<HBox justifyContent="Center">
+										<Button text="{= ${viewModel>income}? 'Income': 'Expense'}"
+												type="{= ${viewModel>income}? 'Accept': 'Reject' }"
+												press="onToggleType"
+												visible="{viewModel>/editable}"/>
+										<ObjectStatus text="{= ${viewModel>income}? 'Income': 'Expense'}"
+													  state="{= ${viewModel>income}? 'Success': 'Error' }"
+													  visible="{= !${viewModel>/editable} }"/>
+									</HBox>
+									<dc:TableCell editMode="{viewModel>/editable}"
+												  editType="Number"
+												  value="{viewModel>/value}"/>
 									<Input editable="{viewModel>/editable}"
 										   value="{value: 'This is a comment', type: 'sap.ui.model.type.Text'}"/>
-									<Text text="Outcome"/>
-									<Input editable="{viewModel>/editable}"
-										   textAlign="Center"
-										   value="{parts: [{value: 2000}, {value: 'ZAR'}], type: 'sap.ui.model.type.Currency', formatOptions: {showMeasure: false}}"/>
 									<Button icon="sap-icon://delete"
 											type="Reject"
 											visible="{viewModel>/editable}"/>

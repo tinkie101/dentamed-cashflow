@@ -5,7 +5,7 @@
   "main": "index.html",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "ui5 serve"
+    "start": "ui5 serve -o index.html"
   },
   "author": "Albert Volschenk",
   "license": "ISC",

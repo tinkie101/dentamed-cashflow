@@ -1,0 +1,37 @@
+<core:FragmentDefinition
+	xmlns="sap.m"
+	xmlns:core="sap.ui.core"
+	xmlns:f="sap.ui.layout.form"
+	xmlns:l="sap.ui.layout">
+	<Dialog id="addDialog"
+			title="New input"
+			state="Information"
+			class="sapUiSizeCompact">
+		<beginButton>
+			<Button text="Add"
+					icon="sap-icon://add"
+					type="Accept"/>
+		</beginButton>
+		<endButton>
+			<Button text="Cancel"
+					icon="sap-icon://cancel"/>
+		</endButton>
+		<f:SimpleForm editable="true"
+					  columnsL="1"
+					  layout="ResponsiveGridLayout">
+			<f:content>
+				<Label text="Income"/>
+				<Input>
+				</Input>
+
+				<Label text="Comment"/>
+				<Input>
+				</Input>
+
+				<Label text="Outcome"/>
+				<Input>
+				</Input>
+			</f:content>
+		</f:SimpleForm>
+	</Dialog>
+</core:FragmentDefinition>
