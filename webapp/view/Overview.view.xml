@@ -13,7 +13,10 @@
 			<f:title>
 				<f:DynamicPageTitle>
 					<f:heading>
-						<Title text="{i18n>appTitle}"/>
+						<HBox alignItems="Center">
+							<Image src="favicon.png" width="2rem"/>
+							<Title text="{i18n>appTitle}" class="sapUiTinyMarginBegin"/>
+						</HBox>
 					</f:heading>
 					<f:actions>
 						<Button icon="sap-icon://print"
@@ -91,7 +94,8 @@
 								<Text text="{i18n>valType}"/>
 							</Column>
 							<Column width="10rem">
-								<Text text="{i18n>value}" class="sapUiTinyMarginBegin"/>
+								<Text text="{i18n>value}"
+									  class="sapUiTinyMarginBegin"/>
 							</Column>
 							<Column>
 								<Text text="{i18n>comment}"/>
