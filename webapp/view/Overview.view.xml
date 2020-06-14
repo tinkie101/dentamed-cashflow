@@ -3,7 +3,6 @@
 	xmlns:mvc="sap.ui.core.mvc"
 	xmlns:f="sap.f"
 	xmlns:l="sap.ui.layout"
-	xmlns:dc="dentamed.cashflow.control"
 	xmlns="sap.m"
 	busy="{viewModel>/busy}"
 	busyIndicatorDelay="{viewModel>/delay}">
@@ -18,8 +17,9 @@
 					</f:heading>
 					<f:actions>
 						<Button icon="sap-icon://print"
-								text="Print"
+								text="{i18n>print}"
 								type="Transparent"
+								press="onPrintPressed"
 								enabled="{= !${viewModel>/editable} }"/>
 					</f:actions>
 				</f:DynamicPageTitle>
@@ -33,17 +33,17 @@
 						<headerToolbar>
 							<Toolbar>
 								<ToolbarSpacer/>
-								<Button text="Edit"
+								<Button text="{i18n>edit}"
 										press="onEditPressed(${viewModel>/editable})"
 										visible="{= !${viewModel>/editable} }"/>
-								<Button text="Add"
+								<Button text="{i18n>add}"
 										press="onAddPressed"
 										visible="{viewModel>/editable}"/>
-								<Button text="Save"
+								<Button text="{i18n>save}"
 										type="Transparent"
 										press="onEditPressed(${viewModel>/editable})"
 										visible="{viewModel>/editable}"/>
-								<Button text="Cancel"
+								<Button text="{i18n>cancel}"
 										type="Transparent"
 										press="onEditPressed(${viewModel>/editable})"
 										visible="{viewModel>/editable}"/>
@@ -57,7 +57,7 @@
 										<layoutData>
 											<l:GridData span="XL11 L11 M11 S11"/>
 										</layoutData>
-										<Label text="Date Range:"/>
+										<Label text="{i18n>dateRange}:"/>
 										<DatePicker displayFormat="MMMM yyyy"
 													value="{viewModel>/selectedDate}"
 													valueFormat="MM-yyyy"
@@ -68,31 +68,33 @@
 									</HBox>
 								</l:Grid>
 								<ToolbarSpacer/>
-								<ObjectStatus text="Income:"
+								<ObjectStatus text="{i18n>income}:"
 											  state="Success"/>
-								<Text text="15614"/>
+								<Text text="{parts: [{path: 'viewModel>/items'}, {path: 'viewModel>/income'}], formatter: '.calculateTotal'}"/>
 
-								<ObjectStatus text="Expenses:"
+								<ObjectStatus text="{i18n>expenses}:"
 											  state="Error"/>
-								<Text text="1000"/>
+								<Text text="{parts: [{path: 'viewModel>/items'}, {path: 'viewModel>/expense'}], formatter: '.calculateTotal'}"/>
 
-								<ObjectStatus text="Net:"
+								<ObjectStatus text="{i18n>net}:"
 											  state="Success"/>
-								<Text text="5614"/>
+								<Text text="{parts: [{path: 'viewModel>/items'},  {path: 'viewModel>/net'}], formatter: '.calculateTotal'}"/>
 							</Toolbar>
 						</infoToolbar>
 						<columns>
-							<Column hAlign="Center"  width="22%">
-								<Text text="Date"/>
+							<Column hAlign="Center"
+									width="22%">
+								<Text text="{i18n>date}"/>
 							</Column>
-							<Column hAlign="Center" width="5rem">
-								<Text text="Type"/>
+							<Column hAlign="Center"
+									width="5rem">
+								<Text text="{i18n>valType}"/>
 							</Column>
-							<Column hAlign="Center" width="10rem">
-								<Text text="Value"/>
+							<Column width="10rem">
+								<Text text="{i18n>value}" class="sapUiTinyMarginBegin"/>
 							</Column>
-							<Column hAlign="Center">
-								<Text text="Comment"/>
+							<Column>
+								<Text text="{i18n>comment}"/>
 							</Column>
 							<Column hAlign="Center"
 									width="3rem">
@@ -104,11 +106,11 @@
 									<DatePicker editable="{viewModel>/editable}"
 												displayFormat="dd MMMM"
 												valueFormat="dd-MM-yyyy"
-												value="01-06-2020"
+												value="{viewModel>date}"
 												textAlign="Center"
 												minDate="{viewModel>/minDate}"
 												maxDate="{viewModel>/maxDate}"/>
-									<HBox justifyContent="Center">
+									<VBox justifyContent="Center">
 										<Button text="{= ${viewModel>income}? 'Income': 'Expense'}"
 												type="{= ${viewModel>income}? 'Accept': 'Reject' }"
 												press="onToggleType"
@@ -116,12 +118,28 @@
 										<ObjectStatus text="{= ${viewModel>income}? 'Income': 'Expense'}"
 													  state="{= ${viewModel>income}? 'Success': 'Error' }"
 													  visible="{= !${viewModel>/editable} }"/>
-									</HBox>
-									<dc:TableCell editMode="{viewModel>/editable}"
-												  editType="Number"
-												  value="{viewModel>/value}"/>
-									<Input editable="{viewModel>/editable}"
-										   value="{value: 'This is a comment', type: 'sap.ui.model.type.Text'}"/>
+									</VBox>
+
+									<VBox class="sapUiTinyMarginBegin">
+										<ObjectStatus text="{
+														path: 'viewModel>value',
+														formatter: '.formatCurrency'
+													  }"
+													  state="{= ${viewModel>income}? 'Success': 'Error' }"
+													  visible="{= !${viewModel>/editable} }"/>
+
+										<Input visible="{viewModel>/editable}"
+											   type="Number"
+											   value="{viewModel>value}"/>
+									</VBox>
+
+									<VBox>
+										<Text text="{viewModel>comment}"
+											  visible="{= !${viewModel>/editable} }"/>
+										<Input visible="{viewModel>/editable}"
+											   value="{viewModel>comment}"/>
+									</VBox>
+
 									<Button icon="sap-icon://delete"
 											type="Reject"
 											visible="{viewModel>/editable}"/>

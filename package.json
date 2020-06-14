@@ -10,6 +10,8 @@
   "author": "Albert Volschenk",
   "license": "ISC",
   "dependencies": {
-    "@ui5/cli": "^2.2.6"
+    "@ui5/cli": "^2.2.6",
+    "docxtemplater": "^3.17.6",
+    "jszip": "^2.0.0"
   }
 }
