@@ -14,11 +14,18 @@
 				<f:DynamicPageTitle>
 					<f:heading>
 						<HBox alignItems="Center">
-							<Image src="favicon.png" width="2rem"/>
-							<Title text="{i18n>appTitle}" class="sapUiTinyMarginBegin"/>
+							<Image src="favicon.png"
+								   width="2rem"/>
+							<Title text="{i18n>appTitle}"
+								   class="sapUiTinyMarginBegin"/>
 						</HBox>
 					</f:heading>
 					<f:actions>
+						<Button icon="sap-icon://refresh"
+								text="{i18n>refresh}"
+								type="Transparent"
+								press="onRefreshPressed"
+								enabled="{= !${viewModel>/editable} }"/>
 						<Button icon="sap-icon://print"
 								text="{i18n>print}"
 								type="Transparent"
@@ -29,10 +36,12 @@
 			</f:title>
 			<f:content>
 				<FlexBox height="98%">
-					<Table busyIndicatorDelay="{viewModel>/delay}"
+					<Table id="resultsTable"
+						   busyIndicatorDelay="{viewModel>/delay}"
 						   busy="{viewModel>/busy}"
-						   items="{viewModel>/items}"
-						   class="sapUiSizeCompact">
+						   class="sapUiSizeCompact"
+						   items="{/Entrys}"
+						   sticky="ColumnHeaders,HeaderToolbar,InfoToolbar">
 						<headerToolbar>
 							<Toolbar>
 								<ToolbarSpacer/>
@@ -108,40 +117,56 @@
 							<ColumnListItem>
 								<cells>
 									<DatePicker editable="{viewModel>/editable}"
-												displayFormat="dd MMMM"
-												valueFormat="dd-MM-yyyy"
-												value="{viewModel>date}"
+												value="{
+													path: 'Date',
+													type: 'dentamed.cashflow.type.Date',
+													formatOptions: {
+														UTC: false
+													}
+												}"
 												textAlign="Center"
-												minDate="{viewModel>/minDate}"
-												maxDate="{viewModel>/maxDate}"/>
+												minDate="{
+													path: 'viewModel>/minDate',
+													type: 'dentamed.cashflow.type.Date',
+													formatOptions: {
+														UTC: false
+													}
+												}"
+												maxDate="{
+													path: 'viewModel>/manDate',
+													type: 'dentamed.cashflow.type.Date',
+													formatOptions: {
+														UTC: false
+													}
+												}"/>
 									<VBox justifyContent="Center">
-										<Button text="{= ${viewModel>income}? 'Income': 'Expense'}"
-												type="{= ${viewModel>income}? 'Accept': 'Reject' }"
+										<Button text="{= ${Income}? 'Income': 'Expense'}"
+												type="{= ${Income}? 'Accept': 'Reject' }"
 												press="onToggleType"
 												visible="{viewModel>/editable}"/>
-										<ObjectStatus text="{= ${viewModel>income}? 'Income': 'Expense'}"
-													  state="{= ${viewModel>income}? 'Success': 'Error' }"
+										<ObjectStatus text="{= ${Income}? 'Income': 'Expense'}"
+													  state="{= ${Income}? 'Success': 'Error' }"
 													  visible="{= !${viewModel>/editable} }"/>
 									</VBox>
 
 									<VBox class="sapUiTinyMarginBegin">
 										<ObjectStatus text="{
-														path: 'viewModel>value',
+														path: 'Value',
 														formatter: '.formatCurrency'
 													  }"
-													  state="{= ${viewModel>income}? 'Success': 'Error' }"
+													  state="{= ${Income}? 'Success': 'Error' }"
 													  visible="{= !${viewModel>/editable} }"/>
 
 										<Input visible="{viewModel>/editable}"
 											   type="Number"
-											   value="{viewModel>value}"/>
+											   value="{Value}"/>
 									</VBox>
 
 									<VBox>
-										<Text text="{viewModel>comment}"
+										<Text text="{Comment}"
 											  visible="{= !${viewModel>/editable} }"/>
 										<Input visible="{viewModel>/editable}"
-											   value="{viewModel>comment}"/>
+											   value="{Comment}"/>
 									</VBox>
 
 									<Button icon="sap-icon://delete"

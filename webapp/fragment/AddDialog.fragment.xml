@@ -1,8 +1,7 @@
 <core:FragmentDefinition
 	xmlns="sap.m"
 	xmlns:core="sap.ui.core"
-	xmlns:f="sap.ui.layout.form"
-	xmlns:l="sap.ui.layout">
+	xmlns:f="sap.ui.layout.form">
 	<Dialog id="addDialog"
 			title="New input"
 			state="Information"
@@ -20,17 +19,25 @@
 					  columnsL="1"
 					  layout="ResponsiveGridLayout">
 			<f:content>
-				<Label text="Income"/>
-				<Input>
-				</Input>
+				<Label text="{i18n>date}"/>
+				<DatePicker
+					minDate="{viewModel>/minDate}"
+					maxDate="{viewModel>/maxDate}"/>
 
-				<Label text="Comment"/>
-				<Input>
-				</Input>
+				<Label text="{i18n>type}"/>
+				<Button text="{= ${viewModel>income}? 'Income': 'Expense'}"
+						type="{= ${viewModel>income}? 'Accept': 'Reject' }"
+						press="onToggleType"
+						visible="{viewModel>/editable}"/>
 
-				<Label text="Outcome"/>
-				<Input>
-				</Input>
+				<Label text="{i18n>value}"/>
+				<Input visible="{viewModel>/editable}"
+					   type="Number"
+					   value="{viewModel>value}"/>
+
+				<Label text="{i18n>comment}"/>
+				<Input visible="{viewModel>/editable}"
+					   value="{viewModel>comment}"/>
 			</f:content>
 		</f:SimpleForm>
 	</Dialog>

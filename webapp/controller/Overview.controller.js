@@ -3,41 +3,82 @@ sap.ui.define([
 		"sap/ui/model/json/JSONModel",
 		"sap/ui/core/Fragment",
 		"sap/ui/core/format/NumberFormat",
-	], function(BaseController, JSONModel, Fragment, NumberFormat) {
+		"sap/ui/model/Filter",
+		"sap/ui/model/FilterOperator",
+		"dentamed/cashflow/type/Date",
+	], function(BaseController, JSONModel, Fragment, NumberFormat, Filter, FilterOperator, CustomDate) {
 		"use strict";
 
 		return BaseController.extend("dentamed.cashflow.controller.Overview", {
-			_oViewModel: new JSONModel({
-				busy: false,
-				delay: 0,
-				editable: false,
-				income: "income",
-				expense: "expense",
-				net: "net",
-				items: [{income: true, value: 100, date: "01-06-2020", comment: "This is a test comment"},
-					{income: false, value: 500, date: "05-06-2020", comment: "This is a test comment"},
-					{income: false, value: 100, date: "01-06-2020", comment: "This is a test comment"},
-					{income: true, value: 800, date: "10-06-2020", comment: "This is a test comment"},
-					{income: true, value: 150, date: "20-06-2020", comment: "This is a test comment"}],
-				selectedDate: undefined,
-				minDate: undefined,
-				maxDate: undefined,
-			}),
+			_oViewModel: new JSONModel(),
 
 			onInit: function() {
 				let oController = this;
-				let date = new Date();
-				let newDate = (date.getMonth() + 1) + "-" + date.getFullYear();
 
-				oController._oViewModel.setProperty("/selectedDate", newDate);
-				oController.onDateChange(newDate);
-
-				oController.getView().setModel(oController._oViewModel, "viewModel");
+				oController._initViewModelData();
 				oController.onRouteMatch("overview", oController._onRouteMatch);
 			},
 
 			_onRouteMatch: function(oEvent) {
 				let oController = this;
+				oController._updateTableBindings();
+			},
+
+			_getMinMaxDates: function(selectedDate) {
+				let dateParts = selectedDate.split("-");
+				let splitDates = {
+					month: dateParts[0],
+					year: dateParts[1],
+				};
+
+				//new Date() has month start index 0, whereas newDate has month start index 1
+				let minDate = new Date(Date.UTC(splitDates.year, splitDates.month - 1, 1, 23));
+				let maxDate = new Date(Date.UTC(splitDates.year, splitDates.month, 0));
+
+				return {minDate, maxDate};
+			},
+
+			_initViewModelData: function() {
+				let oController = this;
+				let date = new Date();
+				let selectedDate = (date.getMonth() + 1) + "-" + date.getFullYear();
+
+				let {minDate, maxDate} = this._getMinMaxDates(selectedDate);
+
+				oController._oViewModel = new JSONModel({
+					busy: false,
+					delay: 0,
+					editable: false,
+					income: "income",
+					expense: "expense",
+					net: "net",
+					selectedDate: selectedDate,
+					minDate: minDate,
+					maxDate: maxDate,
+				});
+
+				oController.getView().setModel(oController._oViewModel, "viewModel");
+			},
+
+			_updateTableBindings: function() {
+				let oController = this;
+				let oTable = oController.getView().byId("resultsTable");
+
+				if (oTable) {
+					let oBinding = oTable.getBinding("items");
+					if (oBinding) {
+						let oFilter = new Filter("Date", FilterOperator.BT, oController._oViewModel.getProperty("/minDate"), oController._oViewModel.getProperty("/maxDate"));
+
+						oBinding.filter(oFilter);
+					}
+				}
+			},
+
+			onRefreshPressed: function() {
+				let oController = this;
+
+				oController._initViewModelData();
+				oController._updateTableBindings();
 			},
 
 			onEditPressed: function(bEditable) {
@@ -73,46 +114,35 @@ sap.ui.define([
 				if (oView.getModel("viewModel").getProperty("/editable")) {
 					oBindContext.getModel().setProperty(oBindContext.getPath("income"), !oBindContext.getProperty("income"));
 				}
-				else {
-
-				}
 			},
 
 			onDateChange: function(newDate) {
 				let oController = this;
-				let dateParts = newDate.split("-");
-				let date = {
-					month: dateParts[0],
-					year: dateParts[1],
-				};
+				let {minDate, maxDate} = oController._getMinMaxDates(newDate);
 
 				//new Date() has month start index 0, whereas newDate has month start index 1
-				oController._oViewModel.setProperty("/minDate", new Date(date.year, date.month - 1, 1));
-				oController._oViewModel.setProperty("/maxDate", new Date(date.year, date.month, 0));
+				oController._oViewModel.setProperty("/minDate", minDate);
+				oController._oViewModel.setProperty("/maxDate", maxDate);
+
+				oController._updateTableBindings();
 			},
 
 			onPrintPressed: function() {
+				let oController = this;
 				this.loadFile().then((template) => {
 					let zip = new JSZip(template);
 
 					let document = new window.docxtemplater().loadZip(zip);
+					let dateParts = oController._oViewModel.getProperty("/selectedDate").split("-");
+					let date = {
+						month: dateParts[0],
+						year: dateParts[1],
+					};
+
 					document.setData({
-						Month: "Jan",
-						Year: 2020,
-						entries: [
-							{
-								Date: "date1",
-								Type: "Income",
-								Value: 1000,
-								Comment: "Comment tsdfg",
-							},
-							{
-								Date: "date2",
-								Type: "Expense",
-								Value: 1000,
-								Comment: "Comment tsdfg",
-							},
-						],
+						Month: date.month,
+						Year: date.year,
+						entries: oController._oViewModel.getProperty("/items"),
 					});
 
 					document.render();
@@ -158,16 +188,25 @@ sap.ui.define([
 			},
 
 			calculateTotal: function(aEntries, type) {
+				if (!aEntries) {
+					return null;
+				}
 				return aEntries.reduce((sum, entry) => {
-					if(type === "income"){
-						if(entry.income) sum += entry.value;
-					} else if (type === "expense") {
-						if(!entry.income) sum += entry.value;
-					} else {
-						entry.income? sum += entry.value : sum -= entry.value;
+					if (type === "income") {
+						if (entry.income) {
+							sum += entry.value;
+						}
+					}
+					else if (type === "expense") {
+						if (!entry.income) {
+							sum += entry.value;
+						}
+					}
+					else {
+						entry.income ? sum += entry.value : sum -= entry.value;
 					}
 					return sum;
-				}, 0)
+				}, 0);
 			},
 		});
 	},

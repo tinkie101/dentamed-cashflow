@@ -8,6 +8,15 @@
 		"description": "{{appDescription}}",
 		"applicationVersion": {
 			"version": "1.0.0"
+		},
+		"dataSources": {
+			"cashflow": {
+				"uri": "http://localhost:8082/proxy/http/localhost:8080/odata.svc/",
+				"type": "OData",
+				"settings": {
+					"odataVersion": "2.0"
+				}
+			}
 		}
 	},
 	"sap.ui": {
@@ -37,6 +46,9 @@
 				"settings": {
 					"bundleName": "dentamed.cashflow.i18n.i18n"
 				}
+			},
+			"": {
+				"dataSource": "cashflow"
 			}
 		},
 		"routing": {
