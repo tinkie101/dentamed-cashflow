@@ -44,20 +44,21 @@
 						   sticky="ColumnHeaders,HeaderToolbar,InfoToolbar">
 						<headerToolbar>
 							<Toolbar>
+								<MessageStrip text="{viewModel>/messageText}" type="{viewModel>/messageType}" visible="{viewModel>/messageVisible}"/>
 								<ToolbarSpacer/>
 								<Button text="{i18n>edit}"
-										press="onEditPressed(${viewModel>/editable})"
+										press="onEditPressed"
 										visible="{= !${viewModel>/editable} }"/>
 								<Button text="{i18n>add}"
 										press="onAddPressed"
 										visible="{viewModel>/editable}"/>
 								<Button text="{i18n>save}"
 										type="Transparent"
-										press="onEditPressed(${viewModel>/editable})"
+										press="onSavePressed"
 										visible="{viewModel>/editable}"/>
 								<Button text="{i18n>cancel}"
 										type="Transparent"
-										press="onEditPressed(${viewModel>/editable})"
+										press="onCancelPressed"
 										visible="{viewModel>/editable}"/>
 							</Toolbar>
 						</headerToolbar>
@@ -133,7 +134,7 @@
 													}
 												}"
 												maxDate="{
-													path: 'viewModel>/manDate',
+													path: 'viewModel>/maxDate',
 													type: 'dentamed.cashflow.type.Date',
 													formatOptions: {
 														UTC: false

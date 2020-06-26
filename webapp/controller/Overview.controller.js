@@ -5,8 +5,9 @@ sap.ui.define([
 		"sap/ui/core/format/NumberFormat",
 		"sap/ui/model/Filter",
 		"sap/ui/model/FilterOperator",
-		"dentamed/cashflow/type/Date",
-	], function(BaseController, JSONModel, Fragment, NumberFormat, Filter, FilterOperator, CustomDate) {
+		"sap/ui/core/MessageType",
+		"dentamed/cashflow/type/Date"
+	], function(BaseController, JSONModel, Fragment, NumberFormat, Filter, FilterOperator, MessageType, DateType) {
 		"use strict";
 
 		return BaseController.extend("dentamed.cashflow.controller.Overview", {
@@ -14,13 +15,25 @@ sap.ui.define([
 
 			onInit: function() {
 				let oController = this;
+				let oOwnerComponent = oController.getOwnerComponent();
+				let oModel = oOwnerComponent.getModel();
 
 				oController._initViewModelData();
+
+				oModel.attachPropertyChange( undefined, () => {
+					if (oModel.hasPendingChanges()) {
+						oController._displayMessage(MessageType.Warning, oOwnerComponent.getModel("i18n").getResourceBundle().getText("unsavedChanges"));
+					}
+				}, oController);
+
 				oController.onRouteMatch("overview", oController._onRouteMatch);
 			},
 
 			_onRouteMatch: function(oEvent) {
 				let oController = this;
+				let oView = oController.getView();
+				let oModel = oView.getModel();
+
 				oController._updateTableBindings();
 			},
 
@@ -49,6 +62,9 @@ sap.ui.define([
 					busy: false,
 					delay: 0,
 					editable: false,
+					messageVisible: false,
+					messageType: MessageType.None,
+					messageText: "",
 					income: "income",
 					expense: "expense",
 					net: "net",
@@ -81,8 +97,62 @@ sap.ui.define([
 				oController._updateTableBindings();
 			},
 
-			onEditPressed: function(bEditable) {
-				this.getView().getModel("viewModel").setProperty("/editable", !bEditable);
+			onSavePressed: function() {
+				let oController = this;
+				let oView = oController.getView();
+				let oModel = oView.getModel();
+				let oResourceBundle = oController.getOwnerComponent().getModel("i18n").getResourceBundle();
+
+				function successMessage() {
+					oController._oViewModel.setProperty("/editable", false);
+					oController._displayMessage(MessageType.Success, oResourceBundle.getText("saveSuccessful"), 3000);
+				}
+
+				if (oModel.hasPendingChanges()) {
+					oModel.submitChanges({
+						success: () => {
+							successMessage();
+						},
+						error: (oError) => {
+							oController._displayMessage(MessageType.Error, oResourceBundle.getText("saveFailed"));
+						},
+					});
+				} else {
+					successMessage();
+				}
+			},
+
+			onCancelPressed: function() {
+				let oController = this;
+				let oView = oController.getView();
+				let oModel = oView.getModel();
+
+				if (oModel.hasPendingChanges()) {
+					oController._displayMessage(MessageType.Warning, oView.getModel("i18n").getResourceBundle().getText("cancelledChanges"), 3000);
+					oModel.resetChanges(undefined, true);
+				}
+
+				oController._oViewModel.setProperty("/editable", false);
+			},
+
+			_displayMessage: function(type, text, duration) {
+				let oController = this;
+
+				oController._oViewModel.setProperty("/messageType", type);
+				oController._oViewModel.setProperty("/messageText", text);
+				oController._oViewModel.setProperty("/messageVisible", true);
+
+				if(duration) {
+					setTimeout(() => {
+						oController._oViewModel.setProperty("/messageVisible", false);
+					}, duration);
+				}
+			},
+
+			onEditPressed: function() {
+				let oController = this;
+
+				oController._oViewModel.setProperty("/editable", true);
 			},
 
 			onAddPressed: function() {
@@ -109,10 +179,10 @@ sap.ui.define([
 			onToggleType: function(oEvent) {
 				let oView = this.getView();
 				let oSource = oEvent.getSource();
-				let oBindContext = oSource.getBindingContext("viewModel");
+				let oBindContext = oSource.getBindingContext();
 
 				if (oView.getModel("viewModel").getProperty("/editable")) {
-					oBindContext.getModel().setProperty(oBindContext.getPath("income"), !oBindContext.getProperty("income"));
+					oBindContext.getModel().setProperty(oBindContext.getPath("Income"), !oBindContext.getProperty("Income"));
 				}
 			},
 

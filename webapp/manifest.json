@@ -48,7 +48,10 @@
 				}
 			},
 			"": {
-				"dataSource": "cashflow"
+				"dataSource": "cashflow",
+				"settings": {
+					"defaultBindingMode": "TwoWay"
+				}
 			}
 		},
 		"routing": {
