@@ -221,8 +221,46 @@ sap.ui.define([
 						type: "blob",
 						mimeType: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
 					});
-					saveAs(output);
+
+					oController._convertToPDF(output);
 				});
+			},
+
+			_convertToPDF: async function(docxFile) {
+				let oController = this;
+				let oModel = oController.getView().getModel();
+
+				try {
+					let response = await fetch('http://localhost:8082/proxy/http/localhost:8080/pdf/docxToPDF',
+						{
+							method: "POST",
+							body: docxFile
+						});
+					let byteArray = await response.arrayBuffer();
+					let blob = new Blob([byteArray], { type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' });
+
+					oController._downloadBlob(blob);
+				} catch (error) {
+					debugger;
+				}
+			},
+
+			_downloadBlob: function(blob) {
+				const URL = window.URL || window.webkitURL;
+				const downloadUrl = URL.createObjectURL(blob);
+				const a = document.createElement('a');
+				const filename = "testdoc.docx";
+
+				if (typeof a.download === 'undefined') {
+					window.location = downloadUrl;
+				} else {
+					a.href = downloadUrl;
+					a.download = filename;
+					document.body.appendChild(a);
+					a.click();
+					window.URL.revokeObjectURL(downloadUrl);
+					document.body.removeChild(a);
+				}
 			},
 
 			loadFile: function() {
