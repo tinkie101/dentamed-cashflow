@@ -30,6 +30,8 @@
 								text="{i18n>print}"
 								type="Transparent"
 								press="onPrintPressed"
+								busy="{viewModel>/printing}"
+								busyIndicatorDelay="0"
 								enabled="{= !${viewModel>/editable} }"/>
 					</f:actions>
 				</f:DynamicPageTitle>

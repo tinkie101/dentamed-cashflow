@@ -6,7 +6,7 @@ sap.ui.define([
 		"sap/ui/model/Filter",
 		"sap/ui/model/FilterOperator",
 		"sap/ui/core/MessageType",
-		"dentamed/cashflow/type/Date"
+		"dentamed/cashflow/type/Date",
 	], function(BaseController, JSONModel, Fragment, NumberFormat, Filter, FilterOperator, MessageType, DateType) {
 		"use strict";
 
@@ -20,7 +20,7 @@ sap.ui.define([
 
 				oController._initViewModelData();
 
-				oModel.attachPropertyChange( undefined, () => {
+				oModel.attachPropertyChange(undefined, () => {
 					if (oModel.hasPendingChanges()) {
 						oController._displayMessage(MessageType.Warning, oOwnerComponent.getModel("i18n").getResourceBundle().getText("unsavedChanges"));
 					}
@@ -62,6 +62,7 @@ sap.ui.define([
 					busy: false,
 					delay: 0,
 					editable: false,
+					printing: false,
 					messageVisible: false,
 					messageType: MessageType.None,
 					messageText: "",
@@ -83,11 +84,15 @@ sap.ui.define([
 				if (oTable) {
 					let oBinding = oTable.getBinding("items");
 					if (oBinding) {
-						let oFilter = new Filter("Date", FilterOperator.BT, oController._oViewModel.getProperty("/minDate"), oController._oViewModel.getProperty("/maxDate"));
-
-						oBinding.filter(oFilter);
+						oBinding.filter(oController._getTableFilters());
 					}
 				}
+			},
+
+			_getTableFilters: function() {
+				let oController = this;
+
+				return new Filter("Date", FilterOperator.BT, oController._oViewModel.getProperty("/minDate"), oController._oViewModel.getProperty("/maxDate"));
 			},
 
 			onRefreshPressed: function() {
@@ -117,7 +122,8 @@ sap.ui.define([
 							oController._displayMessage(MessageType.Error, oResourceBundle.getText("saveFailed"));
 						},
 					});
-				} else {
+				}
+				else {
 					successMessage();
 				}
 			},
@@ -142,7 +148,7 @@ sap.ui.define([
 				oController._oViewModel.setProperty("/messageText", text);
 				oController._oViewModel.setProperty("/messageVisible", true);
 
-				if(duration) {
+				if (duration) {
 					setTimeout(() => {
 						oController._oViewModel.setProperty("/messageVisible", false);
 					}, duration);
@@ -197,63 +203,79 @@ sap.ui.define([
 				oController._updateTableBindings();
 			},
 
-			onPrintPressed: function() {
+			onPrintPressed: async function() {
 				let oController = this;
-				this.loadFile().then((template) => {
-					let zip = new JSZip(template);
 
-					let document = new window.docxtemplater().loadZip(zip);
-					let dateParts = oController._oViewModel.getProperty("/selectedDate").split("-");
-					let date = {
-						month: dateParts[0],
-						year: dateParts[1],
-					};
+				oController._oViewModel.setProperty("/printing", true);
 
-					document.setData({
-						Month: date.month,
-						Year: date.year,
-						entries: oController._oViewModel.getProperty("/items"),
+				let template = await this.loadFile();
+				let zip = new JSZip(template);
+				let document = new window.docxtemplater().loadZip(zip);
+				let dateParts = oController._oViewModel.getProperty("/selectedDate").split("-");
+				let date = {
+					month: dateParts[0],
+					year: dateParts[1],
+				};
+
+				let entries = await oController._getEntries();
+
+				document.setData({
+					Month: date.month,
+					Year: date.year,
+					entries: entries,
+				});
+
+				document.render();
+				let output = document.getZip().generate({
+					type: "blob",
+					mimeType: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+				});
+
+				let pdfBlob = await oController._convertToPDFBlob(output);
+				oController._downloadBlob(pdfBlob);
+
+				oController._oViewModel.setProperty("/printing", false);
+			},
+
+			_getEntries: function() {
+				let oController = this;
+
+				return new Promise((resolve, reject) => {
+					oController.getView().getModel().read("/Entrys", {
+						filters: [oController._getTableFilters()],
+						success: (oData) => {
+							resolve(oData.results);
+						},
+						error: (oError) => {
+							throw oError;
+						},
 					});
-
-					document.render();
-
-					let output = document.getZip().generate({
-						type: "blob",
-						mimeType: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-					});
-
-					oController._convertToPDF(output);
 				});
 			},
 
-			_convertToPDF: async function(docxFile) {
+			_convertToPDFBlob: async function(docxFile) {
 				let oController = this;
-				let oModel = oController.getView().getModel();
+				let response = await fetch("http://localhost:8082/proxy/http/localhost:8080/pdf/docxToPdf", {
+					method: "POST",
+					body: docxFile,
+				});
 
-				try {
-					let response = await fetch('http://localhost:8082/proxy/http/localhost:8080/pdf/docxToPDF',
-						{
-							method: "POST",
-							body: docxFile
-						});
+				if (response.ok) {
 					let byteArray = await response.arrayBuffer();
-					let blob = new Blob([byteArray], { type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' });
-
-					oController._downloadBlob(blob);
-				} catch (error) {
-					debugger;
+					return new Blob([byteArray], {type: "application/pdf"});
 				}
 			},
 
 			_downloadBlob: function(blob) {
 				const URL = window.URL || window.webkitURL;
 				const downloadUrl = URL.createObjectURL(blob);
-				const a = document.createElement('a');
-				const filename = "testdoc.docx";
+				const a = document.createElement("a");
+				const filename = "testdoc.pdf";
 
-				if (typeof a.download === 'undefined') {
+				if (typeof a.download === "undefined") {
 					window.location = downloadUrl;
-				} else {
+				}
+				else {
 					a.href = downloadUrl;
 					a.download = filename;
 					document.body.appendChild(a);
