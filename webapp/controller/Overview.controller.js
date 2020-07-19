@@ -283,9 +283,10 @@ sap.ui.define([
 
 				let entries = await oController._getEntries();
 				let jsDate = new Date(date.year, date.month-1);
+				let dateString = jsDate.toLocaleString('default', { month: 'long', year: 'numeric' });
 
 				document.setData({
-					date: jsDate.toLocaleString('default', { month: 'long', year: 'numeric' }),
+					date: dateString,
 					entries: entries,
 				});
 
@@ -296,7 +297,7 @@ sap.ui.define([
 				});
 
 				let pdfBlob = await oController._convertToPDFBlob(output);
-				oController._downloadBlob(pdfBlob);
+				oController._downloadBlob(pdfBlob, dateString + '.pdf');
 
 				oController._oViewModel.setProperty("/printing", false);
 			},
@@ -355,11 +356,10 @@ sap.ui.define([
 				}
 			},
 
-			_downloadBlob: function(blob) {
+			_downloadBlob: function(blob, filename) {
 				const URL = window.URL || window.webkitURL;
 				const downloadUrl = URL.createObjectURL(blob);
 				const a = document.createElement("a");
-				const filename = "testdoc.pdf";
 
 				if (typeof a.download === "undefined") {
 					window.location = downloadUrl;
