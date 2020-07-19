@@ -134,8 +134,8 @@ sap.ui.define([
 				let oModel = oView.getModel();
 
 				if (oModel.hasPendingChanges()) {
-					oController._displayMessage(MessageType.Warning, oView.getModel("i18n").getResourceBundle().getText("cancelledChanges"), 3000);
 					oModel.resetChanges(undefined, true);
+					oController._displayMessage(MessageType.Warning, oView.getModel("i18n").getResourceBundle().getText("cancelledChanges"), 3000);
 				}
 
 				oController._oViewModel.setProperty("/editable", false);
@@ -161,35 +161,99 @@ sap.ui.define([
 				oController._oViewModel.setProperty("/editable", true);
 			},
 
-			onAddPressed: function() {
+			onAddPressed: async function() {
 				let oController = this;
 				let oView = oController.getView();
+				let oModel = oView.getModel();
 
-				// create dialog lazily
-				if (!oController.byId("addDialog")) {
-					// load asynchronous XML fragment
-					Fragment.load({
-						id: oView.getId(),
-						name: "dentamed.cashflow.fragment.AddDialog",
-					}).then(function(oDialog) {
-						// connect dialog to the root view of this component (models, lifecycle)
-						oView.addDependent(oDialog);
-						oDialog.open();
+				try {
+					await oModel.metadataLoaded(true);
+					let oNewEntry = oModel.createEntry("/Entrys", {
+						properties: {
+							Income: true,
+						},
 					});
-				}
-				else {
-					this.byId("addDialog").open();
+					let oDialog = oController.byId("addDialog");
+					// create dialog lazily
+					if (!oDialog) {
+						// load asynchronous XML fragment
+						oDialog = await Fragment.load({
+							id: oView.getId(),
+							name: "dentamed.cashflow.fragment.AddDialog",
+							controller: oController,
+						});
+
+						// connect dialog to the root view of this component (models, lifecycle)
+						oDialog.setEscapeHandler((promise) => {
+							oModel.resetChanges([oNewEntry.getPath()], true);
+							oController._displayMessage(MessageType.Warning, oView.getModel("i18n").getResourceBundle().getText("cancelledChanges"), 2000);
+							oDialog.close();
+							promise.resolve();
+						});
+
+						oView.addDependent(oDialog);
+					}
+
+					oDialog.bindElement(oNewEntry.getPath());
+					oDialog.open();
+				} catch (error) {
+					debugger;
 				}
 			},
 
+			onEntryDelete: function(oEvent) {
+				let oController = this;
+				let oView = oController.getView();
+				let oModel = oView.getModel();
+				let oBindingContext = oEvent.getSource().getBindingContext();
+				let oResourceBundle = oView.getModel("i18n").getResourceBundle();
+
+				oModel.remove(oBindingContext.getPath(), {
+					success: () => {
+						oController._displayMessage(MessageType.Success, oResourceBundle.getText("removeSuccessful"), 2000);
+					},
+					error: () => {
+						oController._displayMessage(MessageType.Error, oResourceBundle.getText("removeFailed"));
+					},
+				});
+			},
+
+			onAddEntry: function() {
+				let oController = this;
+				let oModel = oController.getView().getModel();
+				let oDialog = oController.byId("addDialog");
+				let oResourceBundle = oController.getOwnerComponent().getModel("i18n").getResourceBundle();
+
+				oModel.submitChanges({
+					success: () => {
+						oController._displayMessage(MessageType.Success, oResourceBundle.getText("addSuccessful"), 3000);
+					},
+					error: (oError) => {
+						oController._displayMessage(MessageType.Error, oResourceBundle.getText("addFailed"));
+					},
+				});
+				oDialog.close();
+			},
+
+			onCloseFragment: function(oEvent) {
+				let oController = this;
+				let oView = oController.getView();
+				let oBindingContext = oEvent.getSource().getBindingContext();
+				let oModel = oController.getView().getModel();
+				let oDialog = oController.byId("addDialog");
+
+				oModel.resetChanges([oBindingContext.getPath()], true);
+				oController._displayMessage(MessageType.Warning, oView.getModel("i18n").getResourceBundle().getText("cancelledChanges"), 2000);
+				oDialog.close();
+			},
+
 			onToggleType: function(oEvent) {
-				let oView = this.getView();
+				let oController = this;
+				let oView = oController.getView();
 				let oSource = oEvent.getSource();
 				let oBindContext = oSource.getBindingContext();
 
-				if (oView.getModel("viewModel").getProperty("/editable")) {
-					oBindContext.getModel().setProperty(oBindContext.getPath("Income"), !oBindContext.getProperty("Income"));
-				}
+				oBindContext.getModel().setProperty(oBindContext.getPath("Income"), !oBindContext.getProperty("Income"));
 			},
 
 			onDateChange: function(newDate) {
@@ -218,10 +282,10 @@ sap.ui.define([
 				};
 
 				let entries = await oController._getEntries();
+				let jsDate = new Date(date.year, date.month-1);
 
 				document.setData({
-					Month: date.month,
-					Year: date.year,
+					date: jsDate.toLocaleString('default', { month: 'long', year: 'numeric' }),
 					entries: entries,
 				});
 
@@ -239,15 +303,40 @@ sap.ui.define([
 
 			_getEntries: function() {
 				let oController = this;
+				let oView = oController.getView();
+				let oResourceBundle = oView.getModel("i18n").getResourceBundle();
 
 				return new Promise((resolve, reject) => {
-					oController.getView().getModel().read("/Entrys", {
+					let oDateType = new DateType({
+						formatOptions: {
+							UTC: false,
+						},
+					});
+
+					oView.getModel().read("/Entrys", {
 						filters: [oController._getTableFilters()],
 						success: (oData) => {
-							resolve(oData.results);
+							if(oData.results) {
+								oData.results.sort((a, b) => {
+									let aDate = new Date(a.Date);
+									let bDate = new Date(b.Date);
+
+									return aDate > bDate? 1 : -1;
+								});
+
+								oData.results.map((entry) => {
+									entry.Date = oDateType.getFormatter().format(entry.Date);
+									entry.Income = entry.Income ? oResourceBundle.getText("income") : oResourceBundle.getText("expense");
+									return entry;
+								});
+
+								resolve(oData.results);
+							} else {
+								resolve([]);
+							}
 						},
 						error: (oError) => {
-							throw oError;
+							reject(oError);
 						},
 					});
 				});

@@ -7,6 +7,7 @@ sap.ui.define([
 
 	return DateType.extend("dentamed.cashflow.type.Date", {
 		formatValue(sValue, sInternalType) {
+			let oType = this;
 			let oDate;
 
 			if (sValue === undefined || sValue === null) {
@@ -18,17 +19,29 @@ sap.ui.define([
 				case "object":
 					return sValue instanceof Date
 						? new Date(sValue.getUTCFullYear(), sValue.getUTCMonth(), sValue.getUTCDate())
-						: this.getModelFormat().parse(sValue, false);
+						: oType.getModelFormat().parse(sValue, false);
 				case "string":
-					oDate = sValue instanceof Date ? sValue : this.getModelFormat().parse(sValue);
-					return oDate ? this.getFormatter(this).format(oDate) : sValue;
+					oDate = sValue instanceof Date ? sValue : oType.getModelFormat().parse(sValue);
+					return oDate ? oType.getFormatter().format(oDate) : sValue;
 				default:
-					throw new FormatException("Don't know how to format " + this.getName() + " to "
+					throw new FormatException("Don't know how to format " + oType.getName() + " to "
 						+ sInternalType);
 			}
 		},
 
-		getFormatter(oType) {
+		parseValue(sValue, sInternalType) {
+			let oType = this;
+			let modelFormatter = oType.getModelFormat();
+
+			return modelFormatter.parse(sValue);
+		},
+
+		validateValue(sValue) {
+		 return sValue instanceof Date;
+		},
+
+		getFormatter() {
+			let oType = this;
 			let oFormatOptions;
 
 			if (!oType.oFormat) {

@@ -48,12 +48,12 @@
 							<Toolbar>
 								<MessageStrip text="{viewModel>/messageText}" type="{viewModel>/messageType}" visible="{viewModel>/messageVisible}"/>
 								<ToolbarSpacer/>
+								<Button text="{i18n>add}"
+										press="onAddPressed"
+										visible="{= !${viewModel>/editable} }"/>
 								<Button text="{i18n>edit}"
 										press="onEditPressed"
 										visible="{= !${viewModel>/editable} }"/>
-								<Button text="{i18n>add}"
-										press="onAddPressed"
-										visible="{viewModel>/editable}"/>
 								<Button text="{i18n>save}"
 										type="Transparent"
 										press="onSavePressed"
@@ -143,11 +143,11 @@
 													}
 												}"/>
 									<VBox justifyContent="Center">
-										<Button text="{= ${Income}? 'Income': 'Expense'}"
+										<Button text="{= ${Income}? ${i18n>income} : ${i18n>expense} }"
 												type="{= ${Income}? 'Accept': 'Reject' }"
 												press="onToggleType"
 												visible="{viewModel>/editable}"/>
-										<ObjectStatus text="{= ${Income}? 'Income': 'Expense'}"
+										<ObjectStatus text="{= ${Income}? ${i18n>income} : ${i18n>expense} }"
 													  state="{= ${Income}? 'Success': 'Error' }"
 													  visible="{= !${viewModel>/editable} }"/>
 									</VBox>
@@ -173,8 +173,9 @@
 									</VBox>
 
 									<Button icon="sap-icon://delete"
-											type="Reject"
-											visible="{viewModel>/editable}"/>
+											type="Transparent"
+											visible="{= !${viewModel>/editable} }"
+											press="onEntryDelete"/>
 								</cells>
 							</ColumnListItem>
 						</items>

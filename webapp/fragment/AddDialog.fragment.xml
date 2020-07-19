@@ -3,17 +3,19 @@
 	xmlns:core="sap.ui.core"
 	xmlns:f="sap.ui.layout.form">
 	<Dialog id="addDialog"
-			title="New input"
+			title="{i18n>newEntry}"
 			state="Information"
 			class="sapUiSizeCompact">
 		<beginButton>
-			<Button text="Add"
+			<Button text="{i18n>add}"
 					icon="sap-icon://add"
-					type="Accept"/>
+					type="Accept"
+					press="onAddEntry"/>
 		</beginButton>
 		<endButton>
-			<Button text="Cancel"
-					icon="sap-icon://cancel"/>
+			<Button text="{i18n>cancel}"
+					icon="sap-icon://cancel"
+					press="onCloseFragment"/>
 		</endButton>
 		<f:SimpleForm editable="true"
 					  columnsL="1"
@@ -21,23 +23,39 @@
 			<f:content>
 				<Label text="{i18n>date}"/>
 				<DatePicker
-					minDate="{viewModel>/minDate}"
-					maxDate="{viewModel>/maxDate}"/>
+					value="{
+						path: 'Date',
+						type: 'dentamed.cashflow.type.Date',
+						formatOptions: {
+							UTC: false
+						}
+					}"
+					minDate="{
+						path: 'viewModel>/minDate',
+						type: 'dentamed.cashflow.type.Date',
+						formatOptions: {
+							UTC: false
+						}
+					}"
+					maxDate="{
+						path: 'viewModel>/maxDate',
+						type: 'dentamed.cashflow.type.Date',
+						formatOptions: {
+							UTC: false
+						}
+					}"/>
 
-				<Label text="{i18n>type}"/>
-				<Button text="{= ${viewModel>income}? 'Income': 'Expense'}"
-						type="{= ${viewModel>income}? 'Accept': 'Reject' }"
-						press="onToggleType"
-						visible="{viewModel>/editable}"/>
+				<Label text="{i18n>valType}"/>
+				<Button text="{= ${Income}? ${i18n>income} : ${i18n>expense} }"
+						type="{= ${Income}? 'Accept': 'Reject' }"
+						press="onToggleType"/>
 
 				<Label text="{i18n>value}"/>
-				<Input visible="{viewModel>/editable}"
-					   type="Number"
-					   value="{viewModel>value}"/>
+				<Input type="Number"
+					   value="{Value}"/>
 
 				<Label text="{i18n>comment}"/>
-				<Input visible="{viewModel>/editable}"
-					   value="{viewModel>comment}"/>
+				<Input value="{Comment}"/>
 			</f:content>
 		</f:SimpleForm>
 	</Dialog>
