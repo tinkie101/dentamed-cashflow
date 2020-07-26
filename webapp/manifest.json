@@ -79,12 +79,6 @@
 		},
 		"resources": {
 			"js": [
-				{
-					"uri": "lib/docxtemplater.min.js"
-				},
-				{
-					"uri": "lib/jszip.min.js"
-				}
 			]
 		}
 	}
