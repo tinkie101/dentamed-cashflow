@@ -6,8 +6,9 @@ sap.ui.define([
 		"sap/ui/model/Filter",
 		"sap/ui/model/FilterOperator",
 		"sap/ui/core/MessageType",
+		"sap/m/MessageBox",
 		"dentamed/cashflow/type/Date",
-	], function(BaseController, JSONModel, Fragment, NumberFormat, Filter, FilterOperator, MessageType, DateType) {
+	], function(BaseController, JSONModel, Fragment, NumberFormat, Filter, FilterOperator, MessageType, MessageBox, DateType) {
 		"use strict";
 
 		return BaseController.extend("dentamed.cashflow.controller.Overview", {
@@ -62,7 +63,6 @@ sap.ui.define([
 					busy: false,
 					delay: 0,
 					editable: false,
-					printing: false,
 					messageVisible: false,
 					messageType: MessageType.None,
 					messageText: "",
@@ -207,14 +207,19 @@ sap.ui.define([
 				let oModel = oView.getModel();
 				let oBindingContext = oEvent.getSource().getBindingContext();
 				let oResourceBundle = oView.getModel("i18n").getResourceBundle();
+				let oEntry = oBindingContext.getObject();
 
-				oModel.remove(oBindingContext.getPath(), {
-					success: () => {
-						oController._displayMessage(MessageType.Success, oResourceBundle.getText("removeSuccessful"), 2000);
-					},
-					error: () => {
-						oController._displayMessage(MessageType.Error, oResourceBundle.getText("removeFailed"));
-					},
+				MessageBox.confirm(oResourceBundle.getText("confirmDelete", [oEntry.Comment, oEntry.Value]), (oAction) => {
+					if(oAction === MessageBox.Action.OK) {
+						oModel.remove(oBindingContext.getPath(), {
+							success: () => {
+								oController._displayMessage(MessageType.Success, oResourceBundle.getText("removeSuccessful"), 2000);
+							},
+							error: () => {
+								oController._displayMessage(MessageType.Error, oResourceBundle.getText("removeFailed"));
+							},
+						});
+					}
 				});
 			},
 
@@ -270,7 +275,7 @@ sap.ui.define([
 			onPrintPressed: async function() {
 				let oController = this;
 
-				oController._oViewModel.setProperty("/printing", true);
+				oController._oViewModel.setProperty("/busy", true);
 
 				let template = await this.loadFile();
 				let zip = new JSZip(template);
@@ -299,7 +304,7 @@ sap.ui.define([
 				let pdfBlob = await oController._convertToPDFBlob(output);
 				oController._downloadBlob(pdfBlob, dateString + '.pdf');
 
-				oController._oViewModel.setProperty("/printing", false);
+				oController._oViewModel.setProperty("/busy", false);
 			},
 
 			_getEntries: function() {

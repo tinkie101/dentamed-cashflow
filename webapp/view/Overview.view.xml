@@ -6,7 +6,9 @@
 	xmlns="sap.m"
 	busy="{viewModel>/busy}"
 	busyIndicatorDelay="{viewModel>/delay}">
-	<Page showHeader="false">
+	<Page showHeader="false"
+		  busy="{viewModel>/busy}"
+		  busyIndicatorDelay="0">
 		<f:DynamicPage headerExpanded="true"
 					   preserveHeaderStateOnScroll="true"
 					   toggleHeaderOnTitleClick="false">
@@ -30,8 +32,6 @@
 								text="{i18n>print}"
 								type="Transparent"
 								press="onPrintPressed"
-								busy="{viewModel>/printing}"
-								busyIndicatorDelay="0"
 								enabled="{= !${viewModel>/editable} }"/>
 					</f:actions>
 				</f:DynamicPageTitle>
