@@ -210,7 +210,7 @@ sap.ui.define([
 				let oEntry = oBindingContext.getObject();
 
 				MessageBox.confirm(oResourceBundle.getText("confirmDelete", [oEntry.Comment, oEntry.Value]), (oAction) => {
-					if(oAction === MessageBox.Action.OK) {
+					if (oAction === MessageBox.Action.OK) {
 						oModel.remove(oBindingContext.getPath(), {
 							success: () => {
 								oController._displayMessage(MessageType.Success, oResourceBundle.getText("removeSuccessful"), 2000);
@@ -277,32 +277,18 @@ sap.ui.define([
 
 				oController._oViewModel.setProperty("/busy", true);
 
-				let template = await this.loadFile();
-				let zip = new JSZip(template);
-				let document = new window.docxtemplater().loadZip(zip);
 				let dateParts = oController._oViewModel.getProperty("/selectedDate").split("-");
 				let date = {
 					month: dateParts[0],
 					year: dateParts[1],
 				};
 
+				let jsDate = new Date(date.year, date.month - 1);
+				let dateString = jsDate.toLocaleString("default", {month: "long", year: "numeric"});
 				let entries = await oController._getEntries();
-				let jsDate = new Date(date.year, date.month-1);
-				let dateString = jsDate.toLocaleString('default', { month: 'long', year: 'numeric' });
+				let pdfBlob = await oController.getPDFFile(dateString, entries);
 
-				document.setData({
-					date: dateString,
-					entries: entries,
-				});
-
-				document.render();
-				let output = document.getZip().generate({
-					type: "blob",
-					mimeType: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-				});
-
-				let pdfBlob = await oController._convertToPDFBlob(output);
-				oController._downloadBlob(pdfBlob, dateString + '.pdf');
+				oController._downloadBlob(pdfBlob, dateString + ".pdf");
 
 				oController._oViewModel.setProperty("/busy", false);
 			},
@@ -322,22 +308,24 @@ sap.ui.define([
 					oView.getModel().read("/Entrys", {
 						filters: [oController._getTableFilters()],
 						success: (oData) => {
-							if(oData.results) {
+							if (oData.results) {
 								oData.results.sort((a, b) => {
 									let aDate = new Date(a.Date);
 									let bDate = new Date(b.Date);
 
-									return aDate > bDate? 1 : -1;
+									return aDate > bDate ? 1 : -1;
 								});
 
-								oData.results.map((entry) => {
-									entry.Date = oDateType.getFormatter().format(entry.Date);
-									entry.Income = entry.Income ? oResourceBundle.getText("income") : oResourceBundle.getText("expense");
-									return entry;
-								});
-
-								resolve(oData.results);
-							} else {
+								resolve(oData.results.map((entry) => {
+									return {
+										date: oDateType.getFormatter().format(entry.Date),
+										value: Number(entry.Value),
+										income: entry.Income ? oResourceBundle.getText("income") : oResourceBundle.getText("expense"),
+										comment: entry.Comment,
+									};
+								}));
+							}
+							else {
 								resolve([]);
 							}
 						},
@@ -348,16 +336,21 @@ sap.ui.define([
 				});
 			},
 
-			_convertToPDFBlob: async function(docxFile) {
-				let oController = this;
-				let response = await fetch("http://localhost:8082/proxy/http/localhost:8080/pdf/docxToPdf", {
+			getPDFFile: async function(dateString, entries) {
+				let response = await fetch("http://localhost:8082/proxy/http/localhost:8080/pdf", {
 					method: "POST",
-					body: docxFile,
+					headers: {
+						"Content-Type": "application/json",
+					},
+					body: JSON.stringify({date: dateString, entries}),
 				});
 
 				if (response.ok) {
 					let byteArray = await response.arrayBuffer();
 					return new Blob([byteArray], {type: "application/pdf"});
+				}
+				else {
+					throw response.statusText;
 				}
 			},
 
@@ -377,25 +370,6 @@ sap.ui.define([
 					window.URL.revokeObjectURL(downloadUrl);
 					document.body.removeChild(a);
 				}
-			},
-
-			loadFile: function() {
-				return new Promise((resolve, reject) => {
-					let xhr = new XMLHttpRequest();
-					xhr.open("GET", "print-template.docx", true);
-
-					xhr.responseType = "arraybuffer";
-
-					xhr.onload = function(e) {
-						if (this.status === 200) {
-							resolve(this.response);
-						}
-					};
-					xhr.onerror = function(error) {
-						reject(error);
-					};
-					xhr.send();
-				});
 			},
 
 			formatCurrency: function(value) {
