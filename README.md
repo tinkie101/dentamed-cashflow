@@ -1,4 +1,4 @@
-# dentamed-cashflow
+# dentamed-cashflow-ui5
 Cashflow app
 
 ## Build
