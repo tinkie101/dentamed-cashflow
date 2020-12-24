@@ -5,12 +5,13 @@
   "main": "index.html",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "ui5 serve -o index.html -p 8082"
+    "start": "ui5 serve -o index.html -p 8082",
+    "build": "ui5 build"
   },
   "author": "Albert Volschenk",
   "license": "ISC",
   "dependencies": {
-    "@ui5/cli": "^2.2.6",
+    "@ui5/cli": "^2.7.1",
     "docxtemplater": "^3.17.6",
     "jszip": "^2.0.0"
   }
