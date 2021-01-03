@@ -337,7 +337,7 @@ sap.ui.define([
 			},
 
 			getPDFFile: async function(dateString, entries) {
-				let response = await fetch("http://localhost:8082/proxy/http/localhost:8080/pdf", {
+				let response = await fetch(`${this.getView().getModel()._getServerUrl()}java/pdf`, {
 					method: "POST",
 					headers: {
 						"Content-Type": "application/json",
