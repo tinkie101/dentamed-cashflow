@@ -50,7 +50,8 @@
 			"": {
 				"dataSource": "cashflow",
 				"settings": {
-					"defaultBindingMode": "TwoWay"
+					"defaultBindingMode": "TwoWay",
+					"useBatch": false
 				}
 			}
 		},
