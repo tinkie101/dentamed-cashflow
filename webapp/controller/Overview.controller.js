@@ -286,7 +286,8 @@ sap.ui.define([
 				let jsDate = new Date(date.year, date.month - 1);
 				let dateString = jsDate.toLocaleString("default", {month: "long", year: "numeric"});
 				let entries = await oController._getEntries();
-				let pdfBlob = await oController.getPDFFile(dateString, entries);
+				let totals = oController.getTotals(entries);
+				let pdfBlob = await oController.getPDFFile(dateString, entries, totals);
 
 				oController._downloadBlob(pdfBlob, dateString + ".pdf");
 
@@ -336,13 +337,38 @@ sap.ui.define([
 				});
 			},
 
-			getPDFFile: async function(dateString, entries) {
+			getTotals: function(entries) {
+				let oController = this;
+				let oView = oController.getView();
+				let oResourceBundle = oView.getModel("i18n").getResourceBundle();
+
+				let incomeTotal = 0;
+				let expensesTotal = 0;
+
+				for(let entry in entries) {
+					if(entries.hasOwnProperty(entry)) {
+						if (entries[entry]["income"] === oResourceBundle.getText("income")) {
+							incomeTotal += entries[entry]["value"];
+						} else {
+							expensesTotal += entries[entry]["value"];
+						}
+					}
+				}
+
+				return {
+					income: incomeTotal,
+					expenses: expensesTotal,
+					net: incomeTotal - expensesTotal
+				}
+			},
+
+			getPDFFile: async function(dateString, entries, totals) {
 				let response = await fetch(`${this.getView().getModel()._getServerUrl()}java/pdf`, {
 					method: "POST",
 					headers: {
 						"Content-Type": "application/json",
 					},
-					body: JSON.stringify({date: dateString, entries}),
+					body: JSON.stringify({date: dateString, entries, in: totals.income, exp: totals.expenses, net: totals.net}),
 				});
 
 				if (response.ok) {

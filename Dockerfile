@@ -1,4 +1,4 @@
-# 1. Build our Angular app
+# 1. Build our fiori app
 FROM node:alpine as builder
 
 WORKDIR /app
@@ -9,7 +9,7 @@ RUN npm ci
 COPY . .
 RUN npm run-script build
 
-# 2. Deploy our Angular app to NGINX
+# 2. Deploy our fiori app to NGINX
 FROM nginx:alpine
 
 ## Replace the default nginx index page with our Angular app
