@@ -12,7 +12,7 @@
   "license": "ISC",
   "dependencies": {
     "@ui5/cli": "^2.7.1",
-    "docxtemplater": "^3.17.6",
+    "docxtemplater": "^3.31.5",
     "jszip": "^2.0.0"
   }
 }
