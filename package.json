@@ -13,6 +13,6 @@
   "dependencies": {
     "@ui5/cli": "^2.7.1",
     "docxtemplater": "^3.17.6",
-    "jszip": "^2.0.0"
+    "jszip": "^3.8.0"
   }
 }
